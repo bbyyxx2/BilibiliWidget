@@ -6,9 +6,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -104,32 +106,69 @@ public class FansImpl extends AppWidgetProvider {
                                 Log.i(TAG, "失败");
                             }
                         });
-
-                        if (!TextUtils.isEmpty(demo.getVip().getAvatar_subscript_url())){
-                            Call<ResponseBody> call2 = request.getVipPic(demo.getVip().getAvatar_subscript_url());
-                            call2.enqueue(new Callback<ResponseBody>() {
-                                @Override
-                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                                    try {
-                                        InputStream byteStream = response.body().byteStream();
-                                        remoteViews.setViewVisibility(R.id.vip_image, View.VISIBLE);
-                                        remoteViews.setImageViewBitmap(R.id.vip_image, toRoundBitmap(BitmapFactory.decodeStream(byteStream)));
-                                        appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
-                                        byteStream.close();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                                    Log.i(TAG, "失败");
-                                }
-                            });
-                        }else {
-                            remoteViews.setViewVisibility(R.id.vip_image, View.GONE);
-                            appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+                        if (demo.getVip().getType() == 2){
+//                            Drawable byteStream = context.getResources().getDrawable(R.drawable.ic_small_vip);
+//                            remoteViews.setImageViewBitmap(R.id.vip_image, toRoundBitmap(BitmapFactory.decodeStream(byteStream)));
+                            remoteViews.setViewVisibility(R.id.vip_image, View.VISIBLE);
+                            remoteViews.setImageViewResource(R.id.vip_image, R.drawable.ic_small_vip);
+                        } else {
+                            remoteViews.setViewVisibility(R.id.vip_image, View.VISIBLE);
+                            remoteViews.setImageViewResource(R.id.vip_image, R.drawable.ic_big_vip);
                         }
+                        appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+
+//                        if (!TextUtils.isEmpty(demo.getPendant().getImage())){
+//                            Call<ResponseBody> call2 = request.getVipPic(demo.getPendant().getImage());
+//                            call2.enqueue(new Callback<ResponseBody>() {
+//                                @Override
+//                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                                    try {
+//                                        InputStream byteStream = response.body().byteStream();
+//                                        remoteViews.setViewVisibility(R.id.user_image_pendant, View.VISIBLE);
+//                                        remoteViews.setImageViewBitmap(R.id.user_image_pendant, imageScale(BitmapFactory.decodeStream(byteStream), 600, 600));
+//                                        appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+//                                        byteStream.close();
+//                                    } catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//
+//                                @Override
+//                                public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                                    Log.i(TAG, "失败");
+//                                }
+//                            });
+////
+//                        } else {
+//                            remoteViews.setViewVisibility(R.id.user_image_pendant, View.GONE);
+//                            appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+//                        }
+                        //Avatar_subscript_url不再提供小图标url
+//                        if (!TextUtils.isEmpty(demo.getVip().getAvatar_subscript_url())){
+//                            Call<ResponseBody> call2 = request.getVipPic(demo.getVip().getAvatar_subscript_url());
+//                            call2.enqueue(new Callback<ResponseBody>() {
+//                                @Override
+//                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                                    try {
+//                                        InputStream byteStream = response.body().byteStream();
+//                                        remoteViews.setViewVisibility(R.id.vip_image, View.VISIBLE);
+//                                        remoteViews.setImageViewBitmap(R.id.vip_image, toRoundBitmap(BitmapFactory.decodeStream(byteStream)));
+//                                        appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+//                                        byteStream.close();
+//                                    } catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//
+//                                @Override
+//                                public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                                    Log.i(TAG, "失败");
+//                                }
+//                            });
+//                        }else {
+//                            remoteViews.setViewVisibility(R.id.vip_image, View.GONE);
+//                            appWidgetManager.updateAppWidget(appWidgetIds[0], remoteViews);
+//                        }
                     }
 
                     @Override
@@ -210,6 +249,30 @@ public class FansImpl extends AppWidgetProvider {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(bitmap, 0, 0, paint);
         return bm;
+    }
+
+    /**
+     * 调整图片大小
+     *
+     * @param bitmap
+     *            源
+     * @param dst_w
+     *            输出宽度
+     * @param dst_h
+     *            输出高度
+     * @return
+     */
+    public static Bitmap imageScale(Bitmap bitmap, int dst_w, int dst_h) {
+        int src_w = bitmap.getWidth();
+        int src_h = bitmap.getHeight();
+        Log.e("test",src_w + "h:" + src_h);
+        float scale_w = ((float) dst_w) / src_w;
+        float scale_h = ((float) dst_h) / src_h;
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale_w, scale_h);
+        Bitmap dstbmp = Bitmap.createBitmap(bitmap, 0, 0, src_w, src_h, matrix,
+                true);
+        return dstbmp;
     }
 
 }

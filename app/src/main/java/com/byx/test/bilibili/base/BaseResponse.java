@@ -8,7 +8,16 @@ package com.byx.test.bilibili.base;
 public class BaseResponse<T> {
     private int code;
     private String message;
+    private int ttl;
     private T data;
+
+    public int getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(int ttl) {
+        this.ttl = ttl;
+    }
 
     public int getCode() {
         return code;
